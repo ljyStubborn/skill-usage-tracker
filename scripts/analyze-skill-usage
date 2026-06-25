@@ -39,8 +39,8 @@ def cmd_summary(args):
     if not records:
         print("No data found. Make sure the plugin hook is active.")
         return
-    counter = Counter(r.get("s", "unknown") for r in records)
-    sessions = len(set(r.get("sid", "") for r in records))
+    counter = Counter(r.get("skill", "unknown") for r in records)
+    sessions = len(set(r.get("session", "") for r in records))
     print(f"Total invocations : {len(records)}")
     print(f"Unique skills     : {len(counter)}")
     print(f"Sessions tracked  : {sessions}")
@@ -57,7 +57,7 @@ def cmd_top(args):
     if not records:
         print("No data.")
         return
-    counter = Counter(r.get("s", "unknown") for r in records)
+    counter = Counter(r.get("skill", "unknown") for r in records)
     limit = args.limit
     print(f"Top {limit} skills:")
     for i, (skill, count) in enumerate(counter.most_common(limit), 1):
@@ -66,23 +66,23 @@ def cmd_top(args):
 
 def cmd_history(args):
     records = load_logs()
-    filtered = [r for r in records if r.get("s") == args.skill]
+    filtered = [r for r in records if r.get("skill") == args.skill]
     if not filtered:
         print(f"No records for skill: {args.skill}")
         return
     print(f"History for '{args.skill}' ({len(filtered)} invocations):")
     for r in filtered:
-        print(f"  {r.get('t', '?')}  session={r.get('sid', '?')[:8]}")
+        print(f"  {r.get('time', '?')}  session={r.get('session', '?')[:8]}")
 
 
 def cmd_recent(args):
     records = load_logs()
     cutoff = datetime.now(timezone.utc) - timedelta(days=args.days)
-    filtered = [r for r in records if (t := parse_time(r.get("t", ""))) and t >= cutoff]
+    filtered = [r for r in records if (t := parse_time(r.get("time", ""))) and t >= cutoff]
     if not filtered:
         print(f"No records in the last {args.days} day(s).")
         return
-    counter = Counter(r.get("s", "unknown") for r in filtered)
+    counter = Counter(r.get("skill", "unknown") for r in filtered)
     print(f"Last {args.days} day(s): {len(filtered)} invocations, {len(counter)} unique skills")
     print()
     for skill, count in counter.most_common():

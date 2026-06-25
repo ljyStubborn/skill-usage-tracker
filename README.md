@@ -7,7 +7,7 @@ Every time Claude invokes a skill via the `Skill` tool, a PostToolUse hook logs 
 ## Install
 
 ```bash
-/plugin marketplace add <your-github-username>/skill-usage-tracker
+/plugin marketplace add ljyStubborn/skill-usage-tracker
 /plugin install skill-usage-tracker@skill-usage-tracker
 ```
 
@@ -44,10 +44,10 @@ Or just ask Claude: **"show me my skill usage stats"** — the included skill ha
 Each line in `~/.claude/skill-usage.jsonl`:
 
 ```json
-{"t":"2026-06-25T05:00:00Z","s":"agent-reach","sid":"abc123"}
+{"time":"2026-06-25T05:00:00Z","skill":"agent-reach","session":"abc123"}
 ```
 
-`t` = ISO timestamp, `s` = skill name, `sid` = session ID.
+`time` = ISO timestamp, `skill` = skill name, `session` = session ID.
 
 ## Requirements
 
