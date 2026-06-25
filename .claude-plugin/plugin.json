@@ -1,0 +1,11 @@
+{
+  "name": "skill-usage-tracker",
+  "version": "1.0.0",
+  "description": "Track which Claude Code skills you use, how often, and when. Logs every Skill tool invocation to ~/.claude/skill-usage.jsonl.",
+  "author": {
+    "name": "Juny",
+    "url": "https://github.com/Juny"
+  },
+  "hooks": "./hooks/hooks.json",
+  "skills": "./skills"
+}

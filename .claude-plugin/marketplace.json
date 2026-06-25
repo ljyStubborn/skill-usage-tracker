@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "skill-usage-tracker",
+  "description": "Track which Claude Code skills you invoke, how often, and when. Logs every Skill tool call and gives you a CLI to analyze usage patterns.",
+  "owner": {
+    "name": "Juny",
+    "url": "https://github.com/Juny"
+  },
+  "plugins": [
+    {
+      "name": "skill-usage-tracker",
+      "description": "Hooks into PostToolUse to log every Skill invocation. Includes an analysis CLI and a skill to query your usage stats.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

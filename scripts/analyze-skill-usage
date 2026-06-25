@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""Analyze Claude Code skill usage from ~/.claude/skill-usage.jsonl"""
+import json
+import sys
+import os
+import argparse
+from collections import Counter
+from datetime import datetime, timezone, timedelta
+from pathlib import Path
+
+LOG = Path.home() / ".claude" / "skill-usage.jsonl"
+
+
+def load_logs():
+    if not LOG.exists():
+        return []
+    records = []
+    with open(LOG, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+    return records
+
+
+def parse_time(t):
+    try:
+        return datetime.fromisoformat(t.replace("Z", "+00:00"))
+    except Exception:
+        return None
+
+
+def cmd_summary(args):
+    records = load_logs()
+    if not records:
+        print("No data found. Make sure the plugin hook is active.")
+        return
+    counter = Counter(r.get("s", "unknown") for r in records)
+    sessions = len(set(r.get("sid", "") for r in records))
+    print(f"Total invocations : {len(records)}")
+    print(f"Unique skills     : {len(counter)}")
+    print(f"Sessions tracked  : {sessions}")
+    print()
+    print(f"{'Skill':<40} {'Count':>6}  {'%':>5}")
+    print("-" * 56)
+    for skill, count in counter.most_common():
+        pct = count / len(records) * 100
+        print(f"{skill:<40} {count:>6}  {pct:>4.1f}%")
+
+
+def cmd_top(args):
+    records = load_logs()
+    if not records:
+        print("No data.")
+        return
+    counter = Counter(r.get("s", "unknown") for r in records)
+    limit = args.limit
+    print(f"Top {limit} skills:")
+    for i, (skill, count) in enumerate(counter.most_common(limit), 1):
+        print(f"  {i:2}. {skill} ({count})")
+
+
+def cmd_history(args):
+    records = load_logs()
+    filtered = [r for r in records if r.get("s") == args.skill]
+    if not filtered:
+        print(f"No records for skill: {args.skill}")
+        return
+    print(f"History for '{args.skill}' ({len(filtered)} invocations):")
+    for r in filtered:
+        print(f"  {r.get('t', '?')}  session={r.get('sid', '?')[:8]}")
+
+
+def cmd_recent(args):
+    records = load_logs()
+    cutoff = datetime.now(timezone.utc) - timedelta(days=args.days)
+    filtered = [r for r in records if (t := parse_time(r.get("t", ""))) and t >= cutoff]
+    if not filtered:
+        print(f"No records in the last {args.days} day(s).")
+        return
+    counter = Counter(r.get("s", "unknown") for r in filtered)
+    print(f"Last {args.days} day(s): {len(filtered)} invocations, {len(counter)} unique skills")
+    print()
+    for skill, count in counter.most_common():
+        print(f"  {skill} — {count}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Analyze Claude Code skill usage")
+    sub = parser.add_subparsers(dest="cmd")
+
+    sub.add_parser("summary", help="Overall usage summary")
+
+    p_top = sub.add_parser("top", help="Top N most-used skills")
+    p_top.add_argument("--limit", type=int, default=10, metavar="N")
+
+    p_hist = sub.add_parser("history", help="Timeline for a specific skill")
+    p_hist.add_argument("--skill", required=True)
+
+    p_recent = sub.add_parser("recent", help="Summary for the last N days")
+    p_recent.add_argument("--days", type=int, default=7, metavar="N")
+
+    args = parser.parse_args()
+    if args.cmd == "summary":
+        cmd_summary(args)
+    elif args.cmd == "top":
+        cmd_top(args)
+    elif args.cmd == "history":
+        cmd_history(args)
+    elif args.cmd == "recent":
+        cmd_recent(args)
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()
